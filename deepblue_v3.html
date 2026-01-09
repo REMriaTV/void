@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content, viewport-fit=cover">
+    <title>Abyss v3</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+        }
+
+        body {
+            background: linear-gradient(180deg, #0f1c2e 0%, #02060a 60%, #000000 100%);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #ccc;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* ▼▼▼ 修正1: マリンスノーの強調 ▼▼▼ */
+        .snow {
+            position: absolute;
+            /* 透明度を上げて、より白くはっきり見えるように変更 (0.1 -> 0.3) */
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: drift linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(0); opacity: 0; }
+            /* 漂っている時の輝きを強くする (0.3 -> 0.7) */
+            50% { opacity: 0.7; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+
+        /* ▼▼▼ 言葉のアニメーション（変更なし） ▼▼▼ */
+        .word {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #b3d1e6; 
+            text-shadow: 0 0 5px rgba(108, 169, 204, 0.3);
+            opacity: 0;
+            animation: fallAndFade 12s ease-out forwards;
+        }
+
+        @keyframes fallAndFade {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            10% { opacity: 0.8; filter: blur(0px); }
+            100% { transform: translateY(400px) scale(0.9); opacity: 0; filter: blur(4px); }
+        }
+
+        /* ▼▼▼ 入力欄の設定（変更なし） ▼▼▼ */
+        input {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%); 
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #1e3a52;
+            color: #e0f2fe;
+            font-size: 1.5rem;
+            width: 80%;
+            max-width: 600px;
+            padding: 10px; 
+            outline: none;
+            text-align: center;
+            transition: all 0.5s ease;
+            z-index: 20;
+            border-radius: 0;
+            bottom: 15%;
+            top: auto;
+        }
+        
+        input::placeholder { color: #1e3a52; font-size: 1rem; }
+
+        /* スマホ: 入力時は上に逃げる */
+        @media (max-width: 767px) {
+            input:focus { bottom: auto; top: 30%; }
+        }
+
+        /* PC: 画面中央・文字サイズ大・隙間狭め(10px)を維持 */
+        @media (min-width: 768px) {
+            input {
+                top: 50%; bottom: auto;
+                transform: translate(-50%, -50%); 
+                font-size: 2rem; padding: 10px; 
+            }
+            input::placeholder { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="snow-container"></div>
+    <div id="container"></div>
+    <input type="text" id="input" placeholder="深海へ沈める (Enter)" autocomplete="off">
+
+    <script>
+        const input = document.getElementById('input');
+        const container = document.getElementById('container');
+        const snowContainer = document.getElementById('snow-container');
+
+        // ▼▼▼ 修正1: マリンスノー生成量の増加とサイズアップ ▼▼▼
+        function createSnow() {
+            // 数を30個から100個へ大幅に増やす
+            const particleCount = 100;
+            for (let i = 0; i < particleCount; i++) {
+                const snow = document.createElement('div');
+                snow.classList.add('snow');
+                // サイズを一回り大きくする (2px〜6pxの範囲)
+                const size = Math.random() * 4 + 2;
+                snow.style.width = `${size}px`;
+                snow.style.height = `${size}px`;
+                // 配置とアニメーション時間は変更なし
+                snow.style.left = `${Math.random() * 100}vw`;
+                snow.style.top = `${Math.random() * 100}vh`;
+                const duration = Math.random() * 20 + 10;
+                snow.style.animationDuration = `${duration}s`;
+                snow.style.animationDelay = `-${Math.random() * 20}s`;
+                snowContainer.appendChild(snow);
+            }
+        }
+        createSnow();
+
+        // ▼▼▼ 修正2: モバイルで入力後にキーボードを閉じる ▼▼▼
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && input.value.trim() !== '' && !e.isComposing) {
+                spawnWord(input.value);
+                input.value = '';
+                // フォーカスを外すことで、モバイルのキーボードを閉じる
+                input.blur();
+            }
+        });
+
+        function spawnWord(text) {
+            const el = document.createElement('div');
+            el.classList.add('word');
+            el.innerText = text;
+            const rect = input.getBoundingClientRect();
+            el.style.top = `${rect.bottom + 10}px`;
+            const randomX = (Math.random() - 0.5) * 40; 
+            el.style.left = `${randomX}px`;
+            container.appendChild(el);
+            setTimeout(() => { el.remove(); }, 12000);
+        }
+    </script>
+</body>
+</html>
