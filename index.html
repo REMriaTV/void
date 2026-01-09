@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Void</title>
+    <style>
+        body {
+            background-color: #050505; /* ほぼ漆黒 */
+            color: #ccc;
+            font-family: 'Courier New', monospace; /* 無機質なフォント */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end; /* 下に入力欄 */
+            overflow: hidden;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80%;
+            pointer-events: none; /* 触れない */
+        }
+
+        .word {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            opacity: 0;
+            animation: floatAndFade 6s ease-out forwards;
+        }
+
+        @keyframes floatAndFade {
+            0% { transform: translateY(100%); opacity: 0; }
+            10% { opacity: 0.8; }
+            80% { opacity: 0.2; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #333;
+            color: #fff;
+            font-size: 1.5rem;
+            width: 80%;
+            max-width: 600px;
+            padding: 10px;
+            margin-bottom: 10vh;
+            outline: none;
+            text-align: center;
+        }
+        
+        input::placeholder {
+            color: #333;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container"></div>
+    <input type="text" id="input" placeholder="ここに吐き出す (Enterで消える)" autofocus autocomplete="off">
+
+    <script>
+        const input = document.getElementById('input');
+        const container = document.getElementById('container');
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && input.value.trim() !== '') {
+                spawnWord(input.value);
+                input.value = '';
+            }
+        });
+
+        function spawnWord(text) {
+            const el = document.createElement('div');
+            el.classList.add('word');
+            el.innerText = text;
+            
+            // ランダムな位置（横方向の揺らぎ）とタイミング
+            const randomX = (Math.random() - 0.5) * 20; // -10px to 10px
+            el.style.left = `${randomX}px`;
+            
+            // 下から湧き上がるようにセット
+            el.style.bottom = '10%'; 
+
+            container.appendChild(el);
+
+            // アニメーション終了後にDOMから完全削除（メモリにも残さない）
+            setTimeout(() => {
+                el.remove();
+            }, 6000);
+        }
+    </script>
+</body>
+</html>
