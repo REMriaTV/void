@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content, viewport-fit=cover">
+    <title>Abyss</title>
+    <style>
+        /* htmlとbodyの両方に高さを指定して、背景が画面全体に広がるようにする */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000000; /* グラデーションが読み込まれるまでの背景色 */
+        }
+
+        body {
+            /* 深海のグラデーション */
+            background: linear-gradient(180deg, #0f1c2e 0%, #02060a 60%, #000000 100%);
+            /* 背景が繰り返されないように設定（念のため） */
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            
+            color: #ccc;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            overflow: hidden;
+            /* タップ時のハイライトを無効化 */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* ▼▼▼ マリンスノー ▼▼▼ */
+        .snow {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: drift linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(0); opacity: 0; }
+            50% { opacity: 0.3; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+
+        /* ▼▼▼ 沈んでいく言葉 ▼▼▼ */
+        .word {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #b3d1e6; 
+            text-shadow: 0 0 5px rgba(108, 169, 204, 0.3);
+            opacity: 0;
+            animation: fallAndFade 12s ease-out forwards;
+        }
+
+        @keyframes fallAndFade {
+            0% { 
+                transform: translateY(0) scale(1); 
+                opacity: 0; 
+            }
+            10% { 
+                opacity: 0.8; 
+                filter: blur(0px);
+            }
+            100% { 
+                transform: translateY(400px) scale(0.9); 
+                opacity: 0;
+                filter: blur(4px);
+            }
+        }
+
+        /* ▼▼▼ 入力欄の設定 ▼▼▼ */
+        input {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%); 
+            
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #1e3a52;
+            color: #e0f2fe;
+            
+            /* ベース（スマホ）のサイズ */
+            font-size: 1.5rem;
+            width: 80%;
+            max-width: 600px;
+            
+            /* ▼ 隙間を狭めました (15px -> 10px) ▼ */
+            padding: 10px; 
+            
+            outline: none;
+            text-align: center;
+            transition: all 0.5s ease;
+            z-index: 20;
+            /* 角丸をなくす（iOS対策） */
+            border-radius: 0;
+
+            /* デフォルト位置（スマホ用）：下の方 */
+            bottom: 15%;
+            top: auto;
+        }
+        
+        input::placeholder {
+            color: #1e3a52;
+            font-size: 1rem;
+        }
+
+        /* ▼▼▼ スマホ最適化: 入力時は上に逃げる ▼▼▼ */
+        @media (max-width: 767px) {
+            input:focus {
+                bottom: auto;
+                top: 30%; 
+            }
+        }
+
+        /* ▼▼▼ PC: 画面中央・文字サイズ大 ▼▼▼ */
+        @media (min-width: 768px) {
+            input {
+                top: 50%;      
+                bottom: auto;
+                transform: translate(-50%, -50%); 
+                
+                font-size: 2rem; 
+                /* PCは少しゆとりを持たせたまま (20px) */
+                padding: 10px; 
+            }
+            
+            input::placeholder {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="snow-container"></div>
+    <div id="container"></div>
+
+    <input type="text" id="input" placeholder="深海へ沈める (Enter)" autocomplete="off">
+
+    <script>
+        const input = document.getElementById('input');
+        const container = document.getElementById('container');
+        const snowContainer = document.getElementById('snow-container');
+
+        // マリンスノー生成
+        function createSnow() {
+            const particleCount = 30;
+            for (let i = 0; i < particleCount; i++) {
+                const snow = document.createElement('div');
+                snow.classList.add('snow');
+                const size = Math.random() * 3 + 1;
+                snow.style.width = `${size}px`;
+                snow.style.height = `${size}px`;
+                snow.style.left = `${Math.random() * 100}vw`;
+                snow.style.top = `${Math.random() * 100}vh`;
+                const duration = Math.random() * 20 + 10;
+                snow.style.animationDuration = `${duration}s`;
+                snow.style.animationDelay = `-${Math.random() * 20}s`;
+                snowContainer.appendChild(snow);
+            }
+        }
+        createSnow();
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && input.value.trim() !== '' && !e.isComposing) {
+                spawnWord(input.value);
+                input.value = '';
+            }
+        });
+
+        function spawnWord(text) {
+            const el = document.createElement('div');
+            el.classList.add('word');
+            el.innerText = text;
+            
+            const rect = input.getBoundingClientRect();
+            
+            // 下線からの距離もpaddingに合わせて調整 (10px)
+            el.style.top = `${rect.bottom + 10}px`;
+            
+            const randomX = (Math.random() - 0.5) * 40; 
+            el.style.left = `${randomX}px`;
+
+            container.appendChild(el);
+
+            setTimeout(() => {
+                el.remove();
+            }, 12000);
+        }
+    </script>
+</body>
+</html>
