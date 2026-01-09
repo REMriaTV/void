@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abyss</title>
+    <style>
+        body {
+            /* 深海のグラデーション：上は暗い紺色、下は完全な闇 */
+            background: linear-gradient(180deg, #0f1c2e 0%, #02060a 60%, #000000 100%);
+            color: #ccc;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end; 
+            overflow: hidden;
+            position: relative;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* ▼▼▼ マリンスノー（背景の塵）の設定 ▼▼▼ */
+        .snow {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1); /* 非常に薄い白 */
+            border-radius: 50%;
+            pointer-events: none;
+            animation: drift linear infinite;
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(0); opacity: 0; }
+            50% { opacity: 0.3; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+
+        /* ▼▼▼ 沈んでいく言葉の設定 ▼▼▼ */
+        .word {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2rem;
+            
+            /* 少し青白く発光させる（深海生物のように） */
+            color: #b3d1e6; 
+            text-shadow: 0 0 5px rgba(108, 169, 204, 0.3);
+            
+            opacity: 0;
+            animation: fallAndFade 12s ease-out forwards;
+        }
+
+        @keyframes fallAndFade {
+            0% { 
+                transform: translateY(0) scale(1); 
+                opacity: 0; 
+            }
+            10% { 
+                opacity: 0.8; 
+                filter: blur(0px);
+            }
+            100% { 
+                /* より深く沈む */
+                transform: translateY(400px) scale(0.9); 
+                opacity: 0;
+                /* 最後は少しぼやけて消える */
+                filter: blur(4px);
+            }
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            /* 入力欄の線も少し青みを帯びさせる */
+            border-bottom: 1px solid #1e3a52;
+            color: #e0f2fe;
+            font-size: 1.5rem;
+            width: 80%;
+            max-width: 600px;
+            padding: 10px;
+            margin-bottom: 10vh;
+            outline: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            z-index: 20;
+        }
+        
+        input::placeholder {
+            color: #1e3a52; /* 暗めの色で控えめに */
+            font-size: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                justify-content: center;
+            }
+            input {
+                margin-bottom: 0;
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="snow-container"></div>
+    <div id="container"></div>
+
+    <input type="text" id="input" placeholder="深海へ沈める (Enter)" autofocus autocomplete="off">
+
+    <script>
+        const input = document.getElementById('input');
+        const container = document.getElementById('container');
+        const snowContainer = document.getElementById('snow-container');
+
+        // ▼▼▼ マリンスノーを生成する処理 ▼▼▼
+        function createSnow() {
+            const particleCount = 30; // 塵の数
+            for (let i = 0; i < particleCount; i++) {
+                const snow = document.createElement('div');
+                snow.classList.add('snow');
+                
+                // ランダムな位置とサイズ
+                const size = Math.random() * 3 + 1; // 1px ~ 4px
+                snow.style.width = `${size}px`;
+                snow.style.height = `${size}px`;
+                snow.style.left = `${Math.random() * 100}vw`;
+                snow.style.top = `${Math.random() * 100}vh`;
+                
+                // アニメーション時間をランダムに（ゆっくり漂う）
+                const duration = Math.random() * 20 + 10; // 10s ~ 30s
+                snow.style.animationDuration = `${duration}s`;
+                
+                // 開始時間をずらす
+                snow.style.animationDelay = `-${Math.random() * 20}s`;
+
+                snowContainer.appendChild(snow);
+            }
+        }
+        createSnow(); // 実行
+
+        // ▼▼▼ 言葉の処理（変更なし） ▼▼▼
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && input.value.trim() !== '' && !e.isComposing) {
+                spawnWord(input.value);
+                input.value = '';
+            }
+        });
+
+        function spawnWord(text) {
+            const el = document.createElement('div');
+            el.classList.add('word');
+            el.innerText = text;
+            
+            const randomX = (Math.random() - 0.5) * 50; 
+            el.style.left = `${randomX}px`;
+            
+            if (window.innerWidth >= 768) {
+                el.style.top = '55%';
+                el.style.bottom = 'auto';
+            } else {
+                el.style.bottom = '10%';
+                el.style.top = 'auto';
+            }
+
+            container.appendChild(el);
+
+            setTimeout(() => {
+                el.remove();
+            }, 12000);
+        }
+    </script>
+</body>
+</html>
